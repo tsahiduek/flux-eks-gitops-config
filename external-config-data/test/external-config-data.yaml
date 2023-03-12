@@ -1,7 +1,7 @@
 apiVersion: v1
 data:
   # AWS Load Balancer Controller configuration values - substitute with your resource ids
-  awsLoadBalancerControllerIamRoleArn: arn:aws:iam::481121494044:role/eksctl-flux-sample-cluster-addon-iamservicea-Role1-EMGWDVMAWO4Q
+  awsLoadBalancerControllerIamRoleArn: arn:aws:iam::481121494044:role/eksctl-flux-gitops-sample-addon-iamserviceac-Role1-5DQ2JPP8DQKQ
   clusterName: flux-sample-cluster
 kind: ConfigMap
 metadata:

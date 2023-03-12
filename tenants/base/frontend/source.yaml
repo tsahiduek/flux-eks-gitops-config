@@ -1,0 +1,24 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: GitRepository
+metadata:
+  name: frontend-team
+  namespace: podinfo
+spec:
+  interval: 1m
+  url: https://github.com/tsahiduek/flux-eks-gitops-config-tenant.git
+  ref:
+    branch: main
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: frontend-team
+  namespace: podinfo
+spec:
+  serviceAccountName: frontend-team
+  interval: 5m
+  sourceRef:
+    kind: GitRepository
+    name: frontend-team
+  prune: true
+  validation: client
