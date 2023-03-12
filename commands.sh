@@ -1,5 +1,5 @@
 export KARPENTER_VERSION=v0.27.0
-export CLUSTER_NAME="flux-gitops-sample"
+export CLUSTER_NAME="flux-gitops"
 export AWS_DEFAULT_REGION="$(aws configure get region)"
 export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
 export TEMPOUT=$(mktemp)
@@ -39,13 +39,14 @@ iamIdentityMappings:
   - system:bootstrappers
   - system:nodes
 
-fargateProfiles:
-  - name: karpenter
-    selectors:
-    - namespace: karpenter
-  - name: kube-system
-    selectors:
-    - namespace: kube-system
+managedNodeGroups:
+- instanceType: m5.large
+  amiFamily: AmazonLinux2
+  name: ${CLUSTER_NAME}-ng
+  desiredCapacity: 2
+  minSize: 1
+  maxSize: 10
+
 EOF
 
 export CLUSTER_ENDPOINT="$(aws eks describe-cluster --name ${CLUSTER_NAME} --query "cluster.endpoint" --output text)"
@@ -95,15 +96,6 @@ spec:
     karpenter.sh/discovery: ${CLUSTER_NAME}
 EOF
 
-eksctl create iamserviceaccount \
---cluster=$CLUSTER_NAME \
---namespace=karpenter \
---name=karpenter \
---attach-policy-arn=arn:aws:iam::$(aws sts get-caller-identity --query "Account" --output text):policy/KarpenterControllerPolicy-${CLUSTER_NAME} \
---override-existing-serviceaccounts \
---region $(aws configure get region) \
---approve --role-only --role-name ${CLUSTER_NAME}-karpenter
-
 cat <<EOF | kubectl apply -f -
 apiVersion: karpenter.sh/v1alpha5
 kind: Provisioner
@@ -132,3 +124,13 @@ spec:
     karpenter.sh/discovery: ${CLUSTER_NAME}
 EOF
 
+
+
+eksctl create iamserviceaccount \
+--cluster=$CLUSTER_NAME \
+--namespace=kube-system \
+--name=aws-load-balancer-controller \
+--attach-policy-arn=arn:aws:iam::$(aws sts get-caller-identity --query "Account" --output text):policy/AWSLoadBalancerControllerIAMPolicy \
+--override-existing-serviceaccounts \
+--region $(aws configure get region) \
+--approve --role-only --role-name ${CLUSTER_NAME}-AWSLoadBalancerController
